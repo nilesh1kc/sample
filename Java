@@ -1,0 +1,44 @@
+// import the necessary libraries
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Base64;
+
+// define a method to convert a Uint8Array to a byte array
+public static byte[] toByteArray(Uint8Array uint8Array) {
+    byte[] bytes = new byte[uint8Array.length()];
+    for (int i = 0; i < uint8Array.length(); i++) {
+        bytes[i] = (byte) uint8Array.get(i);
+    }
+    return bytes;
+}
+
+// define a method to convert a byte array to a base64 string
+public static String toBase64String(byte[] bytes) {
+    return Base64.getEncoder().encodeToString(bytes);
+}
+
+// get the authData from the decodedAttestationObject
+byte[] authData = toByteArray(decodedAttestationObject.getAuthData());
+
+// get the length of the credential ID
+ByteBuffer buffer = ByteBuffer.wrap(authData, 53, 2);
+buffer.order(ByteOrder.BIG_ENDIAN); // use big-endian order
+int credentialIdLength = buffer.getShort() & 0xFFFF; // read as unsigned short
+
+// get the credential ID
+byte[] credentialId = Arrays.copyOfRange(authData, 55, 55 + credentialIdLength);
+
+// get the public key object
+byte[] publicKeyBytes = Arrays.copyOfRange(authData, 55 + credentialIdLength, authData.length);
+
+// the publicKeyBytes are encoded again as CBOR
+CBORObject publicKeyObject = CBORObject.DecodeFromBytes(publicKeyBytes);
+System.out.println(publicKeyObject);
+
+// encode the credential ID and public key as base64 strings
+String credentialIdBase64 = toBase64String(credentialId);
+String publicKeyBase64 = toBase64String(publicKeyBytes);
+
+// print the result
+System.out.println("Credential ID: " + credentialIdBase64);
+System.out.println("Public Key: " + publicKeyBase64);
